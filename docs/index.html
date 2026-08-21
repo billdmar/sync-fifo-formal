@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sync-fifo-formal — formally-verified SystemVerilog FIFO</title>
+  <meta name="description"
+        content="A formally-verified, parameterizable synchronous FIFO in SystemVerilog — proven correct with SymbiYosys, not just simulated.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>sync-fifo-formal</h1>
+    <p class="tagline">A formally-verified, parameterizable synchronous FIFO in
+      SystemVerilog &mdash; <strong>proven correct</strong> with SymbiYosys, not
+      just simulated.</p>
+
+    <div class="badges">
+      <a class="badge green"
+         href="https://github.com/billdmar/sync-fifo-formal/actions/workflows/ci.yml">CI &bull; passing</a>
+      <span class="badge blue">SystemVerilog &bull; IEEE 1800</span>
+      <span class="badge blue">Formal &bull; SymbiYosys</span>
+      <span class="badge green">Sim &bull; Verilator</span>
+      <span class="badge green">BMC &bull; all assertions PASS</span>
+      <span class="badge">License &bull; MIT</span>
+    </div>
+
+    <a class="cta primary" href="https://github.com/billdmar/sync-fifo-formal">View on GitHub</a>
+    <a class="cta" href="https://github.com/billdmar/sync-fifo-formal/actions/workflows/ci.yml">CI workflow</a>
+    <a class="cta" href="https://github.com/billdmar/sync-fifo-formal/blob/main/rtl/sync_fifo.sv">RTL source</a>
+  </header>
+
+  <!-- ───────────────────────── Waveform ───────────────────────── -->
+  <section id="waveform">
+    <h2>&#128200; Waveform &mdash; real simulation trace</h2>
+    <p>This is not a hand-drawn diagram. It is rendered directly from the VCD
+      produced by <span class="mono">make sim</span> (Verilator, DEPTH=8), sliced
+      to the directed fill&rarr;full&rarr;drain&rarr;empty scenario. Every edge
+      and bus value is taken verbatim from the trace.</p>
+
+    <figure class="wave-figure">
+      <img src="waveforms/sim_waves.svg"
+           alt="Digital timing diagram: reset, fill to full (count 0 to 8, wr_data 1 to 8), then read-driven drain (rd_data 1..8 in FIFO order) back to empty.">
+      <figcaption>
+        Reset &rarr; write 8 words (count 0&rarr;8, <span class="pass">full</span>
+        asserts) &rarr; read them back in FIFO order (rd_data = 1,2,3,4,5,6,7,8)
+        &rarr; <span class="pass">empty</span> asserts. Source:
+        <span class="mono">docs/waveforms/sim_waves.vcd</span>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ───────────────────────── Formal ───────────────────────── -->
+  <section id="formal">
+    <h2>&#9989; Formal Verification</h2>
+    <span class="gate">CI gate: BMC depth 20 &mdash; all assertions PASS</span>
+
+    <p>Correctness properties are expressed as SVA assertions and discharged via
+      Bounded Model Checking (BMC, depth 20, the required gate) with a
+      k-induction proof (basecase depth 15) as an informational supplement. A
+      Verilator C++ testbench with a <span class="mono">std::queue</span>
+      golden-model scoreboard provides constrained-random coverage at multiple
+      depths, and a built-in fault-injection path proves the checker is not
+      vacuous.</p>
+
+    <ul class="checks">
+      <li><strong>Formally verified</strong> &mdash; all SVA assertions pass BMC
+        at depth 20 (the required CI gate); k-induction supplements structural
+        completeness.</li>
+      <li><strong>8 SVA property groups</strong> &mdash; covering mutual
+        exclusion, pointer monotonicity, count invariants, and data-ordering via
+        a <span class="mono">$anyconst</span> slot tracker.</li>
+      <li><strong>Verilator scoreboard</strong> &mdash; 7 directed scenarios +
+        10,000-cycle randomized reads/writes validated against a
+        <span class="mono">std::queue</span> golden model.</li>
+      <li><strong>Fault-injection self-test</strong> &mdash;
+        <span class="mono">make sim-fault</span> proves the checker is not
+        vacuous (scoreboard must catch an intentionally injected error).</li>
+      <li><strong>Parameterizable DEPTH 4&ndash;1024</strong> &mdash; depth sweep
+        (4, 8, 16, 64, 256) all green in CI.</li>
+      <li><strong>Green GitHub Actions CI</strong> &mdash; lint + synth + formal
+        BMC + simulation on every push.</li>
+    </ul>
+
+    <h3>SymbiYosys scripts</h3>
+    <table>
+      <thead>
+        <tr><th class="mono">Script</th><th>Mode</th><th>Depth</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">formal/sync_fifo_bmc.sby</td><td>bmc</td><td>20</td><td>CI gate &mdash; required</td></tr>
+        <tr><td class="mono">formal/sync_fifo.sby</td><td>prove (k-ind)</td><td>15</td><td>Inductive proof (informational)</td></tr>
+        <tr><td class="mono">formal/sync_fifo_cover.sby</td><td>cover</td><td>&mdash;</td><td>Reachability of key states</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Simulation results (local, all depths)</h3>
+    <table>
+      <thead><tr><th>DEPTH</th><th>Result</th><th>Self-test</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">4</td><td class="pass">PASS (0 errors)</td><td class="pass">fault caught (exit &ne; 0)</td></tr>
+        <tr><td class="mono">8</td><td class="pass">PASS (0 errors)</td><td class="pass">covers: all 3 REACHED</td></tr>
+        <tr><td class="mono">16</td><td class="pass">PASS (0 errors)</td><td>&mdash;</td></tr>
+        <tr><td class="mono">64</td><td class="pass">PASS (0 errors)</td><td>&mdash;</td></tr>
+        <tr><td class="mono">256</td><td class="pass">PASS (0 errors)</td><td>&mdash;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───────────────────────── Architecture ───────────────────────── -->
+  <section id="architecture">
+    <h2>&#129518; Architecture &mdash; dual-pointer + extra-MSB ring buffer</h2>
+    <p>With only <span class="mono">ADDR_WIDTH</span>-bit pointers there are two
+      indistinguishable states where <span class="mono">wptr == rptr</span>: the
+      FIFO is completely empty <em>and</em> completely full (after wrapping). The
+      standard resolution is to extend each pointer to
+      <span class="mono">ADDR_WIDTH+1</span> bits &mdash; the extra MSB flips once
+      per full wrap of the address space, unambiguously distinguishing full from
+      empty.</p>
+<pre>
+                         &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9484;
+  wr_en   &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9658;  &#9474;          sync_fifo (DUT)            &#9474;
+  wr_data &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9658;  &#9474;                                     &#9474;
+                         &#9474;   ADDR_WIDTH+1-bit write pointer    &#9474;
+                         &#9474;        &#9474;                            &#9474;
+                         &#9474;        &#9660;                            &#9474;
+                         &#9474;   &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9484;          &#9474;
+                         &#9474;   &#9474;  mem[0..DEPTH-1]    &#9474;          &#9474;  &#9668;&#9472; DATA_WIDTH bits each
+                         &#9474;   &#9474;  (ring buffer)      &#9474;          &#9474;
+                         &#9474;   &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9492;          &#9474;
+                         &#9474;        &#9474;                            &#9474;
+                         &#9474;   ADDR_WIDTH+1-bit read pointer     &#9474;
+  rd_en   &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9658; &#9474;  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9484;   &#9474;
+  full    &#9668;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;  &#9474;  &#9474;  Empty/Full Comparators     &#9474;   &#9474;
+  empty   &#9668;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;  &#9474;  &#9474;  empty = (wptr == rptr)     &#9474;   &#9474;
+                         &#9474;  &#9474;  full  = (wptr[AW] !=       &#9474;   &#9474;
+                         &#9474;  &#9474;           rptr[AW])    AND  &#9474;   &#9474;
+                         &#9474;  &#9474;         (wptr[AW-1:0] ==    &#9474;   &#9474;
+                         &#9474;  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9492;   &#9474;
+  count   &#9668;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;  &#9474;     count = wptr - rptr (unsigned)  &#9474;
+  rd_data &#9668;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9658;  &#9474;     rd_data: registered (1-cyc lat) &#9474;
+                         &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9492;
+</pre>
+  </section>
+
+  <!-- ───────────────────────── Quickstart ───────────────────────── -->
+  <section id="quickstart">
+    <h2>&#9889; Quickstart</h2>
+    <div class="panel">
+<pre>git clone https://github.com/billdmar/sync-fifo-formal.git
+cd sync-fifo-formal
+
+make lint          # RTL lint with Verilator
+make formal-bmc    # Bounded model check (depth 20) — CI gate
+make sim           # Verilator simulation at DEPTH=8
+make all           # Full CI gate: lint + synth + formal-bmc + sim</pre>
+    </div>
+  </section>
+
+  <footer>
+    <p>Toolchain: Verilator (lint + sim) &middot; Yosys (synth) &middot;
+      SymbiYosys (formal). MIT License &mdash; Copyright &copy; 2026 William Mar.</p>
+    <p>Source &amp; full README:
+      <a href="https://github.com/billdmar/sync-fifo-formal">github.com/billdmar/sync-fifo-formal</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

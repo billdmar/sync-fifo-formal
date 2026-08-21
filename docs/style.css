@@ -1,0 +1,178 @@
+/* sync-fifo-formal — GitHub Pages styling.
+   Self-contained, no external CDN. Dark theme, monospace for signals. */
+
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #21262d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #58a6ff;
+  --green: #39d353;
+  --orange: #f78166;
+  --mono: "SFMono-Regular", Consolas, Menlo, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+header h1 {
+  font-family: var(--mono);
+  font-size: 2.1rem;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+header .tagline {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+}
+.badge.green { border-color: #238636; color: var(--green); }
+.badge.blue  { border-color: #1f6feb; color: var(--accent); }
+
+.cta {
+  display: inline-block;
+  margin: 4px 8px 0 0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.cta:hover { border-color: var(--accent); }
+.cta.primary { background: #1f6feb22; border-color: #1f6feb; }
+
+section { margin-top: 44px; }
+
+h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+h3 { font-size: 1.05rem; color: var(--text); margin: 24px 0 8px; }
+
+p { color: #c9d1d9; }
+
+a { color: var(--accent); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.wave-figure {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.wave-figure img { width: 100%; min-width: 720px; display: block; }
+figcaption {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 10px;
+  font-family: var(--mono);
+}
+
+pre {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  background: #010409;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  overflow-x: auto;
+  color: #c9d1d9;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 8px;
+}
+th, td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+th { color: var(--muted); font-weight: 600; }
+td.mono, th.mono { font-family: var(--mono); }
+.pass { color: var(--green); font-weight: 600; }
+
+ul.checks { list-style: none; padding: 0; }
+ul.checks li {
+  padding: 6px 0 6px 26px;
+  position: relative;
+}
+ul.checks li::before {
+  content: "\2714";
+  color: var(--green);
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.gate {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--green);
+  border: 1px solid #238636;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 12px;
+}
+
+footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
